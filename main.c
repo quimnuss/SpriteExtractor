@@ -2,6 +2,7 @@
 #include <stdlib.h>
 #include <stdio.h>
 #include <math.h>
+#include <limits.h>
 
 #define MAX_FRAMES 65536
 #define MAX_POINTS 100000
