@@ -54,6 +54,7 @@
 #endif
 
 #include <string.h> // strerror, strncpy
+#include <stdlib.h> // qsort
 
 // change to 0 to compile out any debug checks
 #define TF_DEBUG_CHECKS 1
@@ -257,6 +258,51 @@ void tfTraverse( const char* path, tfCallback cb, void* udata )
 
 	tfDirClose( &dir );
 }
+
+static int compareFiles(const void* a, const void* b) {
+    tfFILE* fileA = (tfFILE*)a;
+    tfFILE* fileB = (tfFILE*)b;
+    return strcmp(fileA->name, fileB->name);
+}
+
+void tfTraverseAlphabetically(const char* path, tfCallback cb, void* udata) {
+    tfDIR dir;
+    tfFILE files[1024];
+    int fileCount = 0;
+
+    if (!tfDirOpen(&dir, path)) {
+        return;
+    }
+
+    while (dir.has_next) {
+        tfFILE file;
+        if (tfReadFile(&dir, &file)) {
+            files[fileCount++] = file;
+        }
+        tfDirNext(&dir);
+    }
+
+    tfDirClose(&dir);
+
+    qsort(files, fileCount, sizeof(tfFILE), compareFiles);
+
+    for (int i = 0; i < fileCount; ++i) {
+        tfFILE* file = &files[i];
+        
+        if (file->is_dir && file->name[0] != '.') {
+            char path2[TF_MAX_PATH];
+            int n = tfSafeStrCpy(path2, path, 0, TF_MAX_PATH);
+            n = tfSafeStrCpy(path2, "/", n - 1, TF_MAX_PATH);
+            tfSafeStrCpy(path2, file->name, n - 1, TF_MAX_PATH);
+            tfTraverse(path2, cb, udata);
+        }
+
+        if (file->is_reg) {
+            cb(file, udata);
+        }
+    }
+}
+
 
 int tfMatchExt( tfFILE* file, const char* ext )
 {

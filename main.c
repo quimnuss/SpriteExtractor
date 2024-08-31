@@ -458,7 +458,7 @@ int main(int argc, char** argv)
     }
 
     if(args.isDir) {
-		tfTraverse(args.inputImage, TraverseImages, &args);
+		tfTraverseAlphabetically(args.inputImage, TraverseImages, &args);
     } else {
         ExtractFrames(args.inputImage, &args);
     }
