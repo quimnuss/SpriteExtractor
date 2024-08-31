@@ -49,6 +49,7 @@ typedef struct
     int maxDistFromEdge;
 	int minW, minH;
     bool pot;
+    bool ground;
     int dw;
     int packW, packH;
 	bool label;
@@ -163,7 +164,9 @@ static void PrintUsage(const char* app)
 	fprintf(stderr, "\t--label\n\t\tPrints the rectangle indices into the top-left corner of the frames.\n");
 	fprintf(stderr, "\t--metadata\n\t\tIf specified, the rectangles are output to a text file in the format mentioned below.\n");
     fprintf(stderr, "\t--pack PACKED_IMAGE_WIDTH PACKED_IMAGE_HEIGHT\n\t\tIf this is supplied, then the frames are tightly packed and metadata is generated for each frame.\n\t\tThe metadata is simply a text file with the number of frames followed by 4 integers\n\t\tfor each frame: x y w h\n");
+    fprintf(stderr, "\t--ground\n\t\tIf this is supplied, then the frames are grounded on the floor instead of centered\n");
 }
+
 
 static bool ParseArgs(Args* args, int argc, char** argv)
 {
@@ -207,6 +210,8 @@ static bool ParseArgs(Args* args, int argc, char** argv)
             i += 2;
         } else if(strcmp(argv[i], "--pot") == 0) {
             args->pot = true;
+		} else if(strcmp(argv[i], "--ground") == 0) {
+            args->ground = true;
 		} else if (strcmp(argv[i], "--label") == 0) {
 			args->label = true;
 		} else if (strcmp(argv[i], "--row-thresh") == 0) {
@@ -570,7 +575,11 @@ int main(int argc, char** argv)
 			int columns = dw / fw;
 
             dx = (i % columns) * fw + fw / 2 - r.w / 2;
-            dy = (i / columns) * fh + fh / 2 - r.h / 2;
+            if(args.ground) {
+                dy = (i / columns) * fh + fh - r.h;
+            } else {    
+                dy = (i / columns) * fh + fh / 2 - r.h / 2;
+            }
         } else {
             dx = rects[i].x;
             dy = rects[i].y;
